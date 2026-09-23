@@ -8,7 +8,9 @@
 
   <span *ngIf="producto.stock === 0 ">Agotado</span>
 
-  <button (click)="agregarAlCarrito.emit(producto)">
+  <button
+    (click)="agregarAlCarrito.emit(producto)"
+    [disabled]="producto.stock === 0">
     Agregar al carrito
   </button>
 

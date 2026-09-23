@@ -1,0 +1,32 @@
+img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+
+
+img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+}
+
+div {
+  margin-bottom: 20px;
+}
+
+button {
+  margin-top: 5px;
+}
