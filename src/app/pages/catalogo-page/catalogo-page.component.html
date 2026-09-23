@@ -1,0 +1,64 @@
+<h1>Catálogo de productos</h1>
+
+<button (click)="alternarRol()">
+  Cambiar rol
+</button>
+
+<p>
+  Rol actual: {{ rol() }}
+</p>
+
+<hr>
+
+<h3>Carrito</h3>
+
+<p>
+  Cantidad de productos: {{ cantidadItems() }}
+</p>
+
+<p>
+  Total: {{ totalCarrito() }}
+</p>
+
+<hr>
+
+<label for="categoria">Filtrar por categoría:</label>
+
+<select
+  id="categoria"
+  #categoriaSelect
+  (change)="cambiarCategoria(categoriaSelect.value)"
+>
+  <option value="Todas">Todas</option>
+  <option value="Tecnología">Tecnología</option>
+  <option value="Hogar">Hogar</option>
+</select>
+
+<hr>
+
+<div [ngSwitch]="rol()">
+
+  <app-tabla-productos
+    *ngSwitchCase="'admin'"
+    [productos]="productosFiltrados()">
+  </app-tabla-productos>
+
+  <div *ngSwitchCase="'customer'">
+
+    <p *ngIf="productosFiltrados().length === 0">
+      No hay productos en esta categoría.
+    </p>
+
+    <div
+      *ngFor="let producto of productosFiltrados(); trackBy: trackById">
+
+      <app-tarjeta-producto
+        [producto]="producto"
+        (agregarAlCarrito)="agregarAlCarrito($event)">
+      </app-tarjeta-producto>
+
+    </div>
+
+  </div>
+
+</div>
