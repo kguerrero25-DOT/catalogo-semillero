@@ -13,52 +13,116 @@
 <h3>Carrito</h3>
 
 <p>
-  Cantidad de productos: {{ cantidadItems() }}
+  Cantidad de productos:
+  {{ carritoService.cantidad() }}
 </p>
 
 <p>
-  Total: {{ totalCarrito() }}
+  Total:
+  {{ carritoService.total() | currency:'COP' }}
 </p>
+
+<button
+  *ngIf="carritoService.cantidad() > 0"
+  (click)="carritoService.vaciar()">
+  Vaciar carrito
+</button>
 
 <hr>
 
-<label for="categoria">Filtrar por categoría:</label>
+<label for="categoria">
+  Filtrar por categoría:
+</label>
 
 <select
   id="categoria"
   #categoriaSelect
-  (change)="cambiarCategoria(categoriaSelect.value)"
->
-  <option value="Todas">Todas</option>
-  <option value="Tecnología">Tecnología</option>
-  <option value="Hogar">Hogar</option>
+  (change)="cambiarCategoria(categoriaSelect.value)">
+
+  <option value="Todas">
+    Todas
+  </option>
+
+  <ng-container *ngIf="categorias$ | async as categorias">
+
+    <option
+      *ngFor="let categoria of categorias"
+      [value]="categoria.id">
+
+      {{ categoria.name }}
+
+    </option>
+
+  </ng-container>
+
 </select>
 
 <hr>
 
-<div [ngSwitch]="rol()">
+<p *ngIf="cargando()">
+  Cargando productos...
+</p>
 
-  <app-tabla-productos
-    *ngSwitchCase="'admin'"
-    [productos]="productosFiltrados()">
-  </app-tabla-productos>
+<p
+  *ngIf="mensajeError()"
+  class="error">
 
-  <div *ngSwitchCase="'customer'">
+  {{ mensajeError() }}
 
-    <p *ngIf="productosFiltrados().length === 0">
-      No hay productos en esta categoría.
-    </p>
+</p>
 
-    <div
-      *ngFor="let producto of productosFiltrados(); trackBy: trackById">
+<p
+  *ngIf="mensajeExito()"
+  class="exito">
 
-      <app-tarjeta-producto
-        [producto]="producto"
-        (agregarAlCarrito)="agregarAlCarrito($event)">
-      </app-tarjeta-producto>
+  {{ mensajeExito() }}
+
+</p>
+
+<ng-container *ngIf="productos$ | async as productos">
+
+  <p
+    *ngIf="
+      !cargando() &&
+      !mensajeError() &&
+      productos.length === 0
+    ">
+
+    No hay productos disponibles.
+
+  </p>
+
+  <div [ngSwitch]="rol()">
+
+    <!-- ADMIN -->
+
+    <app-tabla-productos
+      *ngSwitchCase="'admin'"
+      [productos]="productos"
+      (editar)="editarProducto($event)"
+      (eliminar)="eliminarProducto($event)">
+    </app-tabla-productos>
+
+
+    <!-- CUSTOMER -->
+
+    <div *ngSwitchCase="'customer'">
+
+      <div
+        *ngFor="
+          let producto of productos;
+          trackBy: trackById
+        ">
+
+        <app-tarjeta-producto
+          [producto]="producto"
+          (agregarAlCarrito)="agregarAlCarrito($event)">
+        </app-tarjeta-producto>
+
+      </div>
 
     </div>
 
   </div>
 
-</div>
+</ng-container>
