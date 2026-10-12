@@ -1,12 +1,6 @@
 <h1>Catálogo de productos</h1>
 
-<button (click)="alternarRol()">
-  Cambiar rol
-</button>
-
-<p>
-  Rol actual: {{ rol() }}
-</p>
+<p>Rol actual: {{ rol() }}</p>
 
 <hr>
 
@@ -39,7 +33,7 @@
   #categoriaSelect
   (change)="cambiarCategoria(categoriaSelect.value)">
 
-  <option value="Todas">
+  <option value="Todas" [selected]="categoriaActual() === 'Todas'">
     Todas
   </option>
 
@@ -47,6 +41,7 @@
 
     <option
       *ngFor="let categoria of categorias"
+      [selected]="categoriaActual() === categoria.id.toString()"
       [value]="categoria.id">
 
       {{ categoria.name }}
@@ -114,6 +109,7 @@
           trackBy: trackById
         ">
 
+        <p><a [routerLink]="['/productos', producto.id]">Ver detalle de {{ producto.title }}</a></p>
         <app-tarjeta-producto
           [producto]="producto"
           (agregarAlCarrito)="agregarAlCarrito($event)">
@@ -126,3 +122,5 @@
   </div>
 
 </ng-container>
+
+<div class="paginacion"><button [disabled]="paginaActual() <= 1" (click)="cambiarPagina(paginaActual() - 1)">Página anterior</button> Página {{ paginaActual() }} <button (click)="cambiarPagina(paginaActual() + 1)">Página siguiente</button></div>

@@ -1,5 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import {
   Observable,
   Subject,
@@ -28,25 +30,40 @@ import { CarritoService } from '../../services/carrito.service';
   imports: [
     CommonModule,
     TarjetaProductoComponent,
-    TablaProductosComponent
+    TablaProductosComponent,
+    RouterLink
   ],
   templateUrl: './catalogo-page.component.html',
   styleUrl: './catalogo-page.component.css'
 })
 export class CatalogoPageComponent {
 
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  readonly auth = inject(AuthService);
   private productoService = inject(ProductoService);
   private categoriaService = inject(CategoriaService);
 
   readonly carritoService = inject(CarritoService);
 
-  rol = signal<'admin' | 'customer'>('customer');
+  readonly rol = () => this.auth.tieneRol('admin') ? 'admin' : 'customer';
 
   cargando = signal(false);
   mensajeError = signal('');
   mensajeExito = signal('');
 
   private categoriaSeleccionada = signal<number | null>(null);
+  readonly categoriaActual = signal('Todas');
+  readonly paginaActual = signal(1);
+  constructor() {
+    this.route.queryParamMap.subscribe(params => {
+      const categoria = params.get('categoria');
+      this.categoriaActual.set(categoria ?? 'Todas');
+      this.paginaActual.set(Math.max(1, Number(params.get('pagina')) || 1));
+      this.categoriaSeleccionada.set(categoria && Number.isInteger(Number(categoria)) && Number(categoria) > 0 ? Number(categoria) : null);
+      this.recargar$.next();
+    });
+  }
 
   private recargar$ = new Subject<void>();
 
@@ -194,24 +211,14 @@ export class CatalogoPageComponent {
     );
   }
 
-  alternarRol(): void {
-    this.rol.update(rol =>
-      rol === 'admin' ? 'customer' : 'admin'
-    );
-  }
-
   cambiarCategoria(valor: string): void {
-
     this.mensajeError.set('');
     this.mensajeExito.set('');
+    this.router.navigate([], { relativeTo: this.route, queryParams: { categoria: valor === 'Todas' ? null : valor }, queryParamsHandling: 'merge' });
+  }
 
-    if (valor === 'Todas') {
-      this.categoriaSeleccionada.set(null);
-    } else {
-      this.categoriaSeleccionada.set(Number(valor));
-    }
-
-    this.recargar$.next();
+  cambiarPagina(pagina: number): void {
+    this.router.navigate([], { relativeTo: this.route, queryParams: { pagina: pagina <= 1 ? null : pagina }, queryParamsHandling: 'merge' });
   }
 
   agregarAlCarrito(producto: Producto): void {

@@ -1,6 +1,7 @@
+
 # Catálogo Semillero
 
-Proyecto correspondiente al módulo Frontend 01 del semillero.
+Proyecto correspondiente al módulo Frontend 03 del semillero.
 
 Aplicación realizada con Angular 17 para mostrar un catálogo de productos mediante componentes standalone.
 
@@ -8,7 +9,7 @@ Aplicación realizada con Angular 17 para mostrar un catálogo de productos medi
 
 - Node.js 20
 - npm
-- Angular CLI 17
+ng - Angular CLI 17
 
 ## Instalación
 
@@ -44,3 +45,22 @@ http://localhost:4200
 ```bash
 npx ng build
 ```
+
+## Taller 02 — Servicios, DI y HttpClient
+
+- Productos y categorías obtenidos de la API mediante servicios.
+- Filtro por categoría y operaciones de productos.
+- Carrito con signals y persistencia en LocalStorage.
+
+## Taller 03 — Routing, guards y lazy loading
+
+- Navegación con rutas y menú.
+- `/productos`: catálogo con filtros en la URL.
+- `/productos/:id`: detalle de producto y relacionados.
+- `/carrito`: carrito protegido por inicio de sesión.
+- `/login`: inicio de sesión simulado.
+- `/admin`: panel de administración protegido.
+- Carga diferida de pantallas y protección de cambios sin guardar.
+
+Para probar el inicio de sesión simulado, utiliza la clave `wposs123`. El usuario `admin` accede al panel de administración.
+
