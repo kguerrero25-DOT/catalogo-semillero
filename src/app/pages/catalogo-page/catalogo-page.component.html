@@ -1,126 +1,134 @@
-<h1>Catálogo de productos</h1>
 
-<p>Rol actual: {{ rol() }}</p>
+<div class="contenedor">
 
-<hr>
+  <h1>Catálogo de productos</h1>
 
-<h3>Carrito</h3>
+  <mat-card class="resumen-carrito">
+    <mat-card-content>
+      <h2>Mi carrito</h2>
 
-<p>
-  Cantidad de productos:
-  {{ carritoService.cantidad() }}
-</p>
+      <p>Productos: {{ carritoService.cantidad() }}</p>
+      <p>Total: {{ carritoService.total() | currency:'COP' }}</p>
 
-<p>
-  Total:
-  {{ carritoService.total() | currency:'COP' }}
-</p>
+      <div class="acciones-carrito">
+        <a mat-stroked-button routerLink="/carrito">
+          <mat-icon>shopping_cart</mat-icon>
+          Ver carrito
+        </a>
 
-<button
-  *ngIf="carritoService.cantidad() > 0"
-  (click)="carritoService.vaciar()">
-  Vaciar carrito
-</button>
-
-<hr>
-
-<label for="categoria">
-  Filtrar por categoría:
-</label>
-
-<select
-  id="categoria"
-  #categoriaSelect
-  (change)="cambiarCategoria(categoriaSelect.value)">
-
-  <option value="Todas" [selected]="categoriaActual() === 'Todas'">
-    Todas
-  </option>
-
-  <ng-container *ngIf="categorias$ | async as categorias">
-
-    <option
-      *ngFor="let categoria of categorias"
-      [selected]="categoriaActual() === categoria.id.toString()"
-      [value]="categoria.id">
-
-      {{ categoria.name }}
-
-    </option>
-
-  </ng-container>
-
-</select>
-
-<hr>
-
-<p *ngIf="cargando()">
-  Cargando productos...
-</p>
-
-<p
-  *ngIf="mensajeError()"
-  class="error">
-
-  {{ mensajeError() }}
-
-</p>
-
-<p
-  *ngIf="mensajeExito()"
-  class="exito">
-
-  {{ mensajeExito() }}
-
-</p>
-
-<ng-container *ngIf="productos$ | async as productos">
-
-  <p
-    *ngIf="
-      !cargando() &&
-      !mensajeError() &&
-      productos.length === 0
-    ">
-
-    No hay productos disponibles.
-
-  </p>
-
-  <div [ngSwitch]="rol()">
-
-    <!-- ADMIN -->
-
-    <app-tabla-productos
-      *ngSwitchCase="'admin'"
-      [productos]="productos"
-      (editar)="editarProducto($event)"
-      (eliminar)="eliminarProducto($event)">
-    </app-tabla-productos>
-
-
-    <!-- CUSTOMER -->
-
-    <div *ngSwitchCase="'customer'">
-
-      <div
-        *ngFor="
-          let producto of productos;
-          trackBy: trackById
-        ">
-
-        <p><a [routerLink]="['/productos', producto.id]">Ver detalle de {{ producto.title }}</a></p>
-        <app-tarjeta-producto
-          [producto]="producto"
-          (agregarAlCarrito)="agregarAlCarrito($event)">
-        </app-tarjeta-producto>
-
+        @if (carritoService.cantidad() > 0) {
+        <button
+          mat-button
+          type="button"
+          (click)="carritoService.vaciar()">
+          Vaciar carrito
+        </button>
+        }
       </div>
+    </mat-card-content>
+  </mat-card>
 
-    </div>
+  <mat-form-field appearance="outline" class="filtro">
+    <mat-label>Filtrar por categoría</mat-label>
 
+    <mat-select
+      [value]="categoriaActual()"
+      (selectionChange)="cambiarCategoria($event.value)">
+
+      <mat-option value="Todas">Todas</mat-option>
+
+      @if (categorias$ | async; as categorias) {
+      @for (categoria of categorias; track categoria.id) {
+      <mat-option [value]="categoria.id.toString()">
+        {{ categoria.name }}
+      </mat-option>
+      }
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (cargando()) {
+  <div class="cargando" role="status">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Cargando productos...</span>
+  </div>
+  }
+
+  @if (mensajeError()) {
+  <p class="error" role="alert">{{ mensajeError() }}</p>
+  }
+
+  @if (mensajeExito()) {
+  <p class="exito" role="status">{{ mensajeExito() }}</p>
+  }
+
+  @if (productos$ | async; as productos) {
+
+  @if (!cargando() && !mensajeError() && productos.length === 0) {
+  <p>No hay productos disponibles.</p>
+  }
+
+  @if (rol() === 'admin') {
+
+  <div class="encabezado-admin">
+    <h2>Administración de productos</h2>
+
+    <a
+      mat-flat-button
+      color="primary"
+      routerLink="/admin/productos/nuevo">
+      <mat-icon>add</mat-icon>
+      Nuevo producto
+    </a>
   </div>
 
-</ng-container>
+  <app-tabla-productos
+    [productos]="productos"
+    (editar)="editarProducto($event)"
+    (eliminar)="eliminarProducto($event)">
+  </app-tabla-productos>
 
-<div class="paginacion"><button [disabled]="paginaActual() <= 1" (click)="cambiarPagina(paginaActual() - 1)">Página anterior</button> Página {{ paginaActual() }} <button (click)="cambiarPagina(paginaActual() + 1)">Página siguiente</button></div>
+  } @else {
+
+  <div class="cuadricula">
+    @for (producto of productos; track producto.id) {
+    <div class="elemento">
+      <app-tarjeta-producto
+        [producto]="producto"
+        (agregarAlCarrito)="agregarAlCarrito($event)">
+      </app-tarjeta-producto>
+
+      <a
+        mat-button
+        [routerLink]="['/productos', producto.id]">
+        Ver detalle
+      </a>
+    </div>
+    }
+  </div>
+
+  }
+  }
+
+  <div class="paginacion">
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="paginaActual() <= 1"
+      (click)="cambiarPagina(paginaActual() - 1)">
+      <mat-icon>chevron_left</mat-icon>
+      Anterior
+    </button>
+
+    <span>Página {{ paginaActual() }}</span>
+
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="cambiarPagina(paginaActual() + 1)">
+      Siguiente
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+</div>

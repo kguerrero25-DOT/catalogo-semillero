@@ -8,6 +8,15 @@ import {
   FormControl
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 import { ProductoService } from '../../services/producto.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { Categoria } from '../../models/categoria';
@@ -16,131 +25,256 @@ import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
 @Component({
   selector: 'app-producto-form-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule
+  ],
   template: `
-    <h1>{{ editando() ? 'Editar producto' : 'Nuevo producto' }}</h1>
+    <div class="contenedor">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>
+            {{ editando() ? 'Editar producto' : 'Nuevo producto' }}
+          </mat-card-title>
+        </mat-card-header>
 
-    <form [formGroup]="formulario" (ngSubmit)="guardar()">
+        <mat-card-content>
+          <form [formGroup]="formulario" (ngSubmit)="guardar()">
 
-      @if (editando()) {
-        <p>
-          <label for="codigo">Código del producto</label>
-          <input id="codigo" type="number" formControlName="codigo">
-        </p>
-      }
+            @if (editando()) {
+              <mat-form-field appearance="outline">
+                <mat-label>Código del producto</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  formControlName="codigo">
+              </mat-form-field>
+            }
 
-      <p>
-        <label for="titulo">Título</label>
-        <input id="titulo" formControlName="titulo">
-      </p>
+            <mat-form-field appearance="outline">
+              <mat-label>Título</mat-label>
+              <input matInput formControlName="titulo">
 
-      @if (formulario.controls.titulo.touched) {
-        @if (formulario.controls.titulo.hasError('required')) {
-          <small>El título es obligatorio.</small>
-        }
-        @if (formulario.controls.titulo.hasError('minlength')) {
-          <small>El título debe tener mínimo 3 caracteres.</small>
-        }
-        @if (formulario.controls.titulo.hasError('maxlength')) {
-          <small>El título no puede superar 100 caracteres.</small>
-        }
-        @if (formulario.controls.titulo.hasError('soloEspacios')) {
-          <small>El título no puede contener solo espacios.</small>
-        }
-      }
+              @if (formulario.controls.titulo.hasError('required')) {
+                <mat-error>El título es obligatorio.</mat-error>
+              } @else if (formulario.controls.titulo.hasError('soloEspacios')) {
+                <mat-error>El título no puede contener solo espacios.</mat-error>
+              } @else if (formulario.controls.titulo.hasError('minlength')) {
+                <mat-error>Mínimo 3 caracteres.</mat-error>
+              } @else if (formulario.controls.titulo.hasError('maxlength')) {
+                <mat-error>Máximo 100 caracteres.</mat-error>
+              }
+            </mat-form-field>
 
-      <p>
-        <label for="precio">Precio</label>
-        <input id="precio" type="number" formControlName="precio">
-      </p>
+            <mat-form-field appearance="outline">
+              <mat-label>Precio</mat-label>
+              <input
+                matInput
+                type="number"
+                formControlName="precio">
 
-      @if (formulario.controls.precio.touched) {
-        @if (formulario.controls.precio.hasError('required')) {
-          <small>El precio es obligatorio.</small>
-        }
-        @if (formulario.controls.precio.hasError('min')) {
-          <small>El precio debe ser mayor que cero.</small>
-        }
-      }
+              @if (formulario.controls.precio.hasError('required')) {
+                <mat-error>El precio es obligatorio.</mat-error>
+              } @else if (formulario.controls.precio.hasError('min')) {
+                <mat-error>El precio debe ser mayor que cero.</mat-error>
+              }
+            </mat-form-field>
 
-      <p>
-        <label for="descripcion">Descripción</label>
-        <textarea id="descripcion" formControlName="descripcion"></textarea>
-      </p>
+            <mat-form-field appearance="outline">
+              <mat-label>Descripción</mat-label>
+              <textarea
+                matInput
+                rows="4"
+                formControlName="descripcion">
+              </textarea>
 
-      <p>Caracteres restantes: {{ caracteresRestantes() }}</p>
+              <mat-hint align="end">
+                {{ caracteresRestantes() }} caracteres restantes
+              </mat-hint>
 
-      @if (formulario.controls.descripcion.touched) {
-        @if (formulario.controls.descripcion.hasError('required')) {
-          <small>La descripción es obligatoria.</small>
-        }
-        @if (formulario.controls.descripcion.hasError('minlength')) {
-          <small>La descripción debe tener mínimo 20 caracteres.</small>
-        }
-        @if (formulario.controls.descripcion.hasError('maxlength')) {
-          <small>La descripción no puede superar 500 caracteres.</small>
-        }
-      }
+              @if (formulario.controls.descripcion.hasError('required')) {
+                <mat-error>La descripción es obligatoria.</mat-error>
+              } @else if (formulario.controls.descripcion.hasError('minlength')) {
+                <mat-error>Mínimo 20 caracteres.</mat-error>
+              } @else if (formulario.controls.descripcion.hasError('maxlength')) {
+                <mat-error>Máximo 500 caracteres.</mat-error>
+              }
+            </mat-form-field>
 
-      <p>
-        <label for="categoria">Categoría</label>
-        <select id="categoria" formControlName="categoriaId">
-          <option [ngValue]="0">Selecciona una categoría</option>
-          @for (categoria of categorias(); track categoria.id) {
-            <option [ngValue]="categoria.id">{{ categoria.name }}</option>
-          }
-        </select>
-      </p>
+            <mat-form-field appearance="outline">
+              <mat-label>Categoría</mat-label>
+              <mat-select formControlName="categoriaId">
+                <mat-option [value]="0">
+                  Selecciona una categoría
+                </mat-option>
 
-      @if (formulario.controls.categoriaId.touched &&
-           formulario.controls.categoriaId.invalid) {
-        <small>Selecciona una categoría.</small>
-      }
+                @for (categoria of categorias(); track categoria.id) {
+                  <mat-option [value]="categoria.id">
+                    {{ categoria.name }}
+                  </mat-option>
+                }
+              </mat-select>
 
-      <h2>Imágenes</h2>
+              @if (formulario.controls.categoriaId.invalid) {
+                <mat-error>Selecciona una categoría.</mat-error>
+              }
+            </mat-form-field>
 
-      <div formArrayName="imagenes">
-        @for (control of imagenes.controls; track control; let i = $index) {
-          <p>
-            <input
-              [formControlName]="i"
-              placeholder="URL de imagen">
+            <h2>Imágenes</h2>
+
+            <div formArrayName="imagenes">
+              @for (control of imagenes.controls; track control; let i = $index) {
+                <div class="fila-imagen">
+                  <mat-form-field appearance="outline">
+                    <mat-label>URL de imagen {{ i + 1 }}</mat-label>
+
+                    <input
+                      matInput
+                      type="url"
+                      [formControlName]="i">
+
+                    @if (control.hasError('required')) {
+                      <mat-error>La URL es obligatoria.</mat-error>
+                    } @else if (control.hasError('pattern')) {
+                      <mat-error>
+                        Debe comenzar con http:// o https://.
+                      </mat-error>
+                    }
+                  </mat-form-field>
+
+                  <button
+                    mat-icon-button
+                    type="button"
+                    aria-label="Quitar imagen"
+                    (click)="quitarImagen(i)"
+                    [disabled]="imagenes.length === 1">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
 
             <button
+              mat-stroked-button
               type="button"
-              (click)="quitarImagen(i)"
-              [disabled]="imagenes.length === 1">
-              Quitar
+              (click)="agregarImagen()">
+              <mat-icon>add</mat-icon>
+              Agregar imagen
             </button>
 
-            @if (control.touched && control.hasError('required')) {
-              <small>La URL de la imagen es obligatoria.</small>
+            @if (error()) {
+              <p class="error" role="alert">{{ error() }}</p>
             }
 
-            @if (control.touched && control.hasError('pattern')) {
-              <small>Ingresa una URL válida que comience con http:// o https://.</small>
-            }
-          </p>
-        }
-      </div>
+            <div class="acciones">
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="guardando()">
 
-      <button type="button" (click)="agregarImagen()">
-        Agregar imagen
-      </button>
+                @if (guardando()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                } @else {
+                  <mat-icon>save</mat-icon>
+                  Guardar
+                }
+              </button>
 
-      @if (error()) {
-        <p role="alert">{{ error() }}</p>
+              <a mat-button routerLink="/productos">
+                Volver al catálogo
+              </a>
+            </div>
+
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  `,
+  styles: [`
+    .contenedor {
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    mat-card {
+      width: 100%;
+      max-width: 700px;
+      padding: 20px;
+    }
+
+    mat-card-header {
+      margin-bottom: 24px;
+    }
+
+    mat-card-title {
+      font-size: 24px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    h2 {
+      margin: 8px 0 0;
+    }
+
+    .fila-imagen {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fila-imagen mat-form-field {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .fila-imagen button {
+      flex-shrink: 0;
+    }
+
+    .acciones {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .error {
+      color: #b91c1c;
+    }
+
+    mat-spinner {
+      display: inline-block;
+      margin: auto;
+    }
+
+    @media (max-width: 375px) {
+      .contenedor {
+        padding: 12px 8px;
       }
 
-      <p>
-        <button type="submit" [disabled]="guardando()">
-          {{ guardando() ? 'Guardando...' : 'Guardar' }}
-        </button>
-      </p>
-
-      <a routerLink="/productos">Volver al catálogo</a>
-    </form>
-  `
+      mat-card {
+        padding: 12px;
+      }
+    }
+  `]
 })
 export class ProductoFormPageComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -275,7 +409,7 @@ export class ProductoFormPageComponent implements OnInit {
 
       setTimeout(() => {
         document.querySelector(
-          'input.ng-invalid, textarea.ng-invalid, select.ng-invalid'
+          'input.ng-invalid, textarea.ng-invalid, mat-select.ng-invalid'
         )?.scrollIntoView({
           behavior: 'smooth',
           block: 'center'

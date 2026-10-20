@@ -6,6 +6,12 @@ import {
   Validators
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
 import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
 import { clavesIguales } from '../../validators/claves-iguales.validator';
 import { correoDisponible } from '../../validators/correo-disponible.validator';
@@ -13,106 +19,183 @@ import { correoDisponible } from '../../validators/correo-disponible.validator';
 @Component({
   selector: 'app-registro-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatProgressSpinnerModule
+  ],
   template: `
-    <h1>Registro de usuario</h1>
+    <div class="contenedor">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Registro de usuario</mat-card-title>
+        </mat-card-header>
 
-    <form [formGroup]="formulario" (ngSubmit)="registrar()">
+        <mat-card-content>
+          <form [formGroup]="formulario" (ngSubmit)="registrar()">
 
-      <p>
-        <label for="nombre">Nombre</label>
-        <input id="nombre" type="text" formControlName="nombre">
-      </p>
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="nombre">
 
-      @if (formulario.controls.nombre.touched) {
-        @if (formulario.controls.nombre.hasError('required')) {
-          <small>El nombre es obligatorio.</small>
-        }
-        @if (formulario.controls.nombre.hasError('minlength')) {
-          <small>El nombre debe tener mínimo 3 caracteres.</small>
-        }
-        @if (formulario.controls.nombre.hasError('soloEspacios')) {
-          <small>El nombre no puede contener solo espacios.</small>
-        }
+              @if (formulario.controls.nombre.hasError('required')) {
+                <mat-error>El nombre es obligatorio.</mat-error>
+              }
+              @if (formulario.controls.nombre.hasError('minlength')) {
+                <mat-error>El nombre debe tener mínimo 3 caracteres.</mat-error>
+              }
+              @if (formulario.controls.nombre.hasError('soloEspacios')) {
+                <mat-error>El nombre no puede contener solo espacios.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Correo electrónico</mat-label>
+              <input
+                matInput
+                type="email"
+                formControlName="correo"
+                autocomplete="email">
+
+              @if (formulario.controls.correo.hasError('required')) {
+                <mat-error>El correo es obligatorio.</mat-error>
+              }
+              @if (formulario.controls.correo.hasError('email')) {
+                <mat-error>Ingresa un correo válido.</mat-error>
+              }
+              @if (formulario.controls.correo.hasError('correoOcupado')) {
+                <mat-error>Este correo ya está registrado.</mat-error>
+              }
+              @if (formulario.controls.correo.hasError('errorServidor')) {
+                <mat-error>No se pudo comprobar el correo.</mat-error>
+              }
+
+              @if (formulario.controls.correo.pending) {
+                <mat-hint>Comprobando disponibilidad...</mat-hint>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Contraseña</mat-label>
+              <input
+                matInput
+                type="password"
+                formControlName="clave"
+                autocomplete="new-password">
+
+              @if (formulario.controls.clave.hasError('required')) {
+                <mat-error>La contraseña es obligatoria.</mat-error>
+              }
+              @if (formulario.controls.clave.hasError('minlength')) {
+                <mat-error>Mínimo 8 caracteres.</mat-error>
+              }
+              @if (formulario.controls.clave.hasError('pattern')) {
+                <mat-error>Debe contener una letra y un número.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Confirmar contraseña</mat-label>
+              <input
+                matInput
+                type="password"
+                formControlName="confirmacion"
+                autocomplete="new-password">
+
+              @if (formulario.controls.confirmacion.hasError('required')) {
+                <mat-error>Debes confirmar la contraseña.</mat-error>
+              }
+              @if (formulario.controls.confirmacion.touched &&
+                   formulario.hasError('clavesDistintas')) {
+                <mat-hint class="error-confirmacion">
+                  Las contraseñas no coinciden.
+                </mat-hint>
+              }
+            </mat-form-field>
+
+            @if (error()) {
+              <p class="error" role="alert">{{ error() }}</p>
+            }
+
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="enviando() || formulario.pending">
+              @if (enviando()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                Registrarse
+              }
+            </button>
+
+            <a mat-button routerLink="/login">
+              Volver al inicio de sesión
+            </a>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  `,
+  styles: [`
+    .contenedor {
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    mat-card {
+      width: 100%;
+      max-width: 460px;
+      padding: 20px;
+    }
+
+    mat-card-header {
+      margin-bottom: 24px;
+    }
+
+    mat-card-title {
+      font-size: 24px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    button {
+      min-height: 44px;
+    }
+
+    .error,
+    .error-confirmacion {
+      color: #b91c1c;
+    }
+
+    mat-spinner {
+      display: inline-block;
+      margin: auto;
+    }
+
+    @media (max-width: 375px) {
+      .contenedor {
+        padding: 16px 8px;
       }
 
-      <p>
-        <label for="correo">Correo electrónico</label>
-        <input id="correo" type="email" formControlName="correo">
-      </p>
-
-      @if (formulario.controls.correo.touched) {
-        @if (formulario.controls.correo.hasError('required')) {
-          <small>El correo es obligatorio.</small>
-        }
-        @if (formulario.controls.correo.hasError('email')) {
-          <small>Ingresa un correo válido.</small>
-        }
-        @if (formulario.controls.correo.hasError('correoOcupado')) {
-          <small>Este correo ya está registrado.</small>
-        }
-        @if (formulario.controls.correo.hasError('errorServidor')) {
-          <small>No se pudo comprobar el correo. Inténtalo nuevamente.</small>
-        }
+      mat-card {
+        padding: 12px;
       }
-
-      @if (formulario.controls.correo.pending) {
-        <small>Comprobando disponibilidad del correo...</small>
-      }
-
-      <p>
-        <label for="clave">Contraseña</label>
-        <input id="clave" type="password" formControlName="clave">
-      </p>
-
-      @if (formulario.controls.clave.touched) {
-        @if (formulario.controls.clave.hasError('required')) {
-          <small>La contraseña es obligatoria.</small>
-        }
-        @if (formulario.controls.clave.hasError('minlength')) {
-          <small>La contraseña debe tener al menos 8 caracteres.</small>
-        }
-        @if (formulario.controls.clave.hasError('pattern')) {
-          <small>La contraseña debe contener al menos una letra y un número.</small>
-        }
-      }
-
-      <p>
-        <label for="confirmacion">Confirmar contraseña</label>
-        <input
-          id="confirmacion"
-          type="password"
-          formControlName="confirmacion">
-      </p>
-
-      @if (formulario.controls.confirmacion.touched &&
-           formulario.controls.confirmacion.hasError('required')) {
-        <small>Debes confirmar la contraseña.</small>
-      }
-
-      @if (formulario.controls.confirmacion.touched &&
-           formulario.hasError('clavesDistintas')) {
-        <small>Las contraseñas no coinciden.</small>
-      }
-
-      @if (error()) {
-        <p role="alert">{{ error() }}</p>
-      }
-
-      <p>
-        <button
-          type="submit"
-          [disabled]="enviando() || formulario.pending">
-          {{ enviando() ? 'Registrando...' : 'Registrarse' }}
-        </button>
-      </p>
-
-    </form>
-
-    <p>
-      <a routerLink="/login">Volver al inicio de sesión</a>
-    </p>
-  `
+    }
+  `]
 })
 export class RegistroPageComponent {
   private fb = inject(FormBuilder);

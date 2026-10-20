@@ -1,22 +1,96 @@
-img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
+
+.contenedor {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
 }
 
-table {
+h1 {
+  margin-bottom: 24px;
+}
+
+.resumen-carrito {
+  margin-bottom: 24px;
+}
+
+.resumen-carrito h2 {
+  margin-top: 0;
+}
+
+.acciones-carrito {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filtro {
   width: 100%;
-  border-collapse: collapse;
+  max-width: 360px;
+  margin-bottom: 24px;
 }
 
-th,
-td {
-  padding: 8px;
-  border: 1px solid #ddd;
+.cargando {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 20px 0;
 }
+
 .error {
+  color: #b91c1c;
   font-weight: bold;
 }
+
 .exito {
+  color: #15803d;
   font-weight: bold;
+}
+
+.encabezado-admin {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.cuadricula {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.elemento {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.elemento app-tarjeta-producto {
+  flex: 1;
+}
+
+.paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+@media (max-width: 375px) {
+  .contenedor {
+    padding: 16px 8px;
+  }
+
+  .cuadricula {
+    grid-template-columns: 1fr;
+  }
+
+  .paginacion {
+    gap: 8px;
+  }
 }
