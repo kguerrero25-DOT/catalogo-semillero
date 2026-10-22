@@ -1,19 +1,50 @@
-
 # Catálogo Semillero
 
-Proyecto correspondiente al módulo Frontend 03 del semillero.
+Proyecto desarrollado con Angular 17 como parte del semillero de desarrollo Frontend.
 
-Aplicación realizada con Angular 17 para mostrar un catálogo de productos mediante componentes standalone.
+La aplicación permite consultar productos, filtrarlos por categoría, gestionar un carrito de compras y administrar productos mediante un sistema de autenticación con JWT y roles.
+
+## Aplicación publicada
+
+**Enlace:** https://catalogo-semillero-ebon.vercel.app/
+
+**Repositorio:** https://github.com/kguerrero25-DOT/catalogo-semillero
+
+## Tecnologías utilizadas
+
+- Angular 17
+- TypeScript
+- Angular Material
+- Angular Router
+- Reactive Forms
+- HttpClient
+- RxJS
+- Signals
+- API REST
+- JWT
+- Vercel
 
 ## Requisitos
 
 - Node.js 20
 - npm
-ng - Angular CLI 17
+- Angular CLI 17
 
 ## Instalación
 
-Clonar el repositorio e instalar las dependencias:
+Clonar el repositorio:
+
+```bash
+git clone https://github.com/kguerrero25-DOT/catalogo-semillero.git
+```
+
+Entrar a la carpeta del proyecto:
+
+```bash
+cd catalogo-semillero
+```
+
+Instalar las dependencias:
 
 ```bash
 npm install
@@ -22,45 +53,89 @@ npm install
 ## Ejecutar el proyecto
 
 ```bash
-npx ng serve
+npx ng serve --port 4300
 ```
 
-Luego abrir en el navegador:
+Abrir en el navegador:
 
-http://localhost:4200
+http://localhost:4300
 
 ## Funcionalidades
 
-- Vista de cliente con tarjetas de productos.
-- Vista de administrador con tabla de productos.
-- Cambio entre roles admin y customer.
-- Filtro por categoría.
-- Carrito con cantidad de productos y total.
-- Productos agotados.
-- Uso de signals y computed.
-- Comunicación entre componentes mediante Input y Output.
+### Catálogo de productos
 
-## Compilar
+- Consulta de productos desde una API REST.
+- Visualización de productos mediante tarjetas.
+- Filtro por categoría.
+- Detalle de productos.
+- Indicador de productos agotados.
+
+### Carrito de compras
+
+- Agregar y eliminar productos.
+- Consultar cantidades y total.
+- Persistencia de información mediante LocalStorage.
+
+### Autenticación y seguridad
+
+- Inicio de sesión mediante JWT.
+- Almacenamiento y validación del token.
+- Persistencia de sesión al actualizar la página.
+- Protección de rutas mediante guards.
+- Control de acceso según el rol del usuario.
+- Interceptor HTTP para agregar el token a las peticiones.
+- Manejo de errores de autenticación.
+
+### Administración
+
+- Acceso exclusivo para administradores.
+- Tabla de productos con Angular Material.
+- Paginación de productos.
+- Creación y edición de productos.
+- Eliminación con diálogo de confirmación.
+- Formularios reactivos con validaciones.
+
+### Interfaz
+
+- Componentes standalone.
+- Angular Material para formularios, tarjetas, botones y navegación.
+- Indicadores de carga.
+- Mensajes de confirmación mediante SnackBar.
+- Diseño adaptable a diferentes tamaños de pantalla.
+
+## Usuarios de prueba
+
+La aplicación utiliza autenticación mediante una API externa.
+
+| Rol | Correo |
+|---|---|
+| Administrador | admin@mail.com |
+| Cliente | john@mail.com |
+
+Las contraseñas deben corresponder a las cuentas disponibles en la API.
+
+## Compilación de producción
 
 ```bash
 npx ng build
 ```
 
-## Taller 02 — Servicios, DI y HttpClient
+Los archivos de producción se generan en:
 
-- Productos y categorías obtenidos de la API mediante servicios.
-- Filtro por categoría y operaciones de productos.
-- Carrito con signals y persistencia en LocalStorage.
+```text
+dist/catalogo-semillero/browser
+```
 
-## Taller 03 — Routing, guards y lazy loading
+## Despliegue
 
-- Navegación con rutas y menú.
-- `/productos`: catálogo con filtros en la URL.
-- `/productos/:id`: detalle de producto y relacionados.
-- `/carrito`: carrito protegido por inicio de sesión.
-- `/login`: inicio de sesión simulado.
-- `/admin`: panel de administración protegido.
-- Carga diferida de pantallas y protección de cambios sin guardar.
+La aplicación está publicada en Vercel y conectada al repositorio de GitHub para realizar despliegues automáticos desde la rama principal.
 
-Para probar el inicio de sesión simulado, utiliza la clave `wposs123`. El usuario `admin` accede al panel de administración.
+**URL:** https://catalogo-semillero-ebon.vercel.app/
 
+## Talleres realizados
+
+- **Taller 01:** Componentes standalone, comunicación mediante Input y Output y catálogo de productos.
+- **Taller 02:** Servicios, inyección de dependencias, HttpClient y consumo de API REST.
+- **Taller 03:** Routing, guards, lazy loading y navegación.
+- **Taller 04:** Formularios reactivos, validaciones y gestión de productos.
+- **Taller 05:** Autenticación JWT, interceptores HTTP, protección de rutas, Angular Material y despliegue en Vercel.
