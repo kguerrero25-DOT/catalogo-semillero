@@ -41,11 +41,11 @@ import { CarritoService } from '../../services/carrito.service';
           <mat-card-content class="contenido-producto">
             <div>
               <a [routerLink]="['/productos', producto.id]">
-                {{ producto.title }}
+                {{ producto.titulo }}
               </a>
 
               <p class="precio">
-                {{ producto.price | currency:'COP' }}
+                {{ producto.precio | currency:'COP' }}
               </p>
             </div>
 

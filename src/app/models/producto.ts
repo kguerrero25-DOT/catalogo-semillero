@@ -1,11 +1,28 @@
 
 
-export interface Producto {
+export interface ProductoListado {
   id: number;
-  title: string;
-  price: number;
-  description: string;
-  images: string[];
-  stock: number;
-  category: { id: number; name: string };
+  titulo: string;
+  precio: number;
+}
+
+export interface ProductoDetalle {
+  id: number;
+  titulo: string;
+  precio: number;
+  existencias: number;
+  categoria: string;
+}
+
+export interface ProductoEscritura {
+  titulo: string;
+  precio: number;
+  existencias: number;
+  categoriaId: number;
+}
+
+export interface ProductoCarrito {
+  id: number;
+  titulo: string;
+  precio: number;
 }

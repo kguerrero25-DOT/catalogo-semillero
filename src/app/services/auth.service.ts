@@ -4,28 +4,33 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap, switchMap, map, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export type RolUsuario = 'ADMIN' | 'EDITOR' | 'USER';
+
 export interface UsuarioSesion {
-  nombre: string;
-  rol: 'admin' | 'usuario';
+  id: number;
+  usuario: string;
+  correo: string;
+  rol: RolUsuario;
+  activo: boolean;
 }
 
 interface RespuestaLogin {
-  access_token: string;
-  refresh_token: string;
+  token: string;
+  tipo: string;
+  usuario: string;
+  rol: RolUsuario;
 }
 
 interface PerfilUsuario {
   id: number;
-  email: string;
-  name: string;
-  role: string;
+  usuario: string;
+  correo: string;
+  rol: RolUsuario;
+  activo: boolean;
 }
 
 interface DatosToken {
   exp?: number;
-  role?: string;
-  email?: string;
-  sub?: number;
 }
 
 @Injectable({
@@ -69,12 +74,11 @@ export class AuthService {
 
       const datos = this.decodificarToken(token);
 
-      if (!datos || typeof datos.exp !== 'number') {
-        this.cerrarSesion();
-        return null;
-      }
-
-      if (datos.exp * 1000 <= Date.now()) {
+      if (
+        datos &&
+        typeof datos.exp === 'number' &&
+        datos.exp * 1000 <= Date.now()
+      ) {
         this.cerrarSesion();
         return null;
       }
@@ -98,36 +102,47 @@ export class AuthService {
       if (
         typeof datos !== 'object' ||
         datos === null ||
-        !('nombre' in datos) ||
+        !('id' in datos) ||
+        !('usuario' in datos) ||
+        !('correo' in datos) ||
         !('rol' in datos) ||
-        typeof datos.nombre !== 'string' ||
-        (datos.rol !== 'admin' && datos.rol !== 'usuario')
+        !('activo' in datos) ||
+        typeof datos.id !== 'number' ||
+        typeof datos.usuario !== 'string' ||
+        typeof datos.correo !== 'string' ||
+        (datos.rol !== 'ADMIN' &&
+          datos.rol !== 'EDITOR' &&
+          datos.rol !== 'USER') ||
+        typeof datos.activo !== 'boolean'
       ) {
         return null;
       }
 
       return {
-        nombre: datos.nombre,
-        rol: datos.rol
+        id: datos.id,
+        usuario: datos.usuario,
+        correo: datos.correo,
+        rol: datos.rol,
+        activo: datos.activo
       };
     } catch {
       return null;
     }
   }
 
-  iniciarSesion(correo: string, clave: string): Observable<RespuestaLogin> {
+  iniciarSesion(usuario: string, contrasena: string): Observable<RespuestaLogin> {
     return this.http.post<RespuestaLogin>(
       `${environment.apiUrl}/auth/login`,
       {
-        email: correo,
-        password: clave
+        usuario,
+        contrasena
       }
     ).pipe(
       tap(respuesta => {
         try {
           localStorage.setItem(
             this.claveToken,
-            respuesta.access_token
+            respuesta.token
           );
           localStorage.removeItem(this.claveUsuario);
           this.usuario.set(null);
@@ -138,12 +153,15 @@ export class AuthService {
       }),
       switchMap(respuesta =>
         this.http.get<PerfilUsuario>(
-          `${environment.apiUrl}/auth/profile`
+          `${environment.apiUrl}/auth/yo`
         ).pipe(
           map(perfil => {
             const usuario: UsuarioSesion = {
-              nombre: perfil.name || perfil.email,
-              rol: perfil.role === 'admin' ? 'admin' : 'usuario'
+              id: perfil.id,
+              usuario: perfil.usuario,
+              correo: perfil.correo,
+              rol: perfil.rol,
+              activo: perfil.activo
             };
 
             try {
@@ -168,6 +186,21 @@ export class AuthService {
     );
   }
 
+  registrar(
+    usuario: string,
+    contrasena: string,
+    correo: string
+  ): Observable<RespuestaLogin> {
+    return this.http.post<RespuestaLogin>(
+      `${environment.apiUrl}/auth/registro`,
+      {
+        usuario,
+        contrasena,
+        correo
+      }
+    );
+  }
+
   cerrarSesion(): void {
     try {
       localStorage.removeItem(this.claveToken);
@@ -183,7 +216,7 @@ export class AuthService {
     return this.obtenerToken() !== null;
   }
 
-  tieneRol(rol: 'admin' | 'usuario'): boolean {
+  tieneRol(rol: RolUsuario): boolean {
     return this.estaAutenticado() &&
       this.usuario()?.rol === rol;
   }

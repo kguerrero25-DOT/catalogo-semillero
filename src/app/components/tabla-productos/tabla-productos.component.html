@@ -14,34 +14,17 @@
       </td>
     </ng-container>
 
-    <ng-container matColumnDef="imagen">
-      <th mat-header-cell *matHeaderCellDef>Miniatura</th>
-      <td mat-cell *matCellDef="let producto">
-        <img
-          class="miniatura"
-          [src]="producto.images[0]"
-          [alt]="'Imagen de ' + producto.title">
-      </td>
-    </ng-container>
-
     <ng-container matColumnDef="titulo">
       <th mat-header-cell *matHeaderCellDef>Título</th>
       <td mat-cell *matCellDef="let producto">
-        {{ producto.title }}
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="categoria">
-      <th mat-header-cell *matHeaderCellDef>Categoría</th>
-      <td mat-cell *matCellDef="let producto">
-        {{ producto.category.name }}
+        {{ producto.titulo }}
       </td>
     </ng-container>
 
     <ng-container matColumnDef="precio">
       <th mat-header-cell *matHeaderCellDef>Precio</th>
       <td mat-cell *matCellDef="let producto">
-        {{ producto.price }}
+        {{ producto.precio }}
       </td>
     </ng-container>
 

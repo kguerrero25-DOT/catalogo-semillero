@@ -18,34 +18,31 @@ import { AuthService } from '../../services/auth.service';
     <form [formGroup]="formulario" (ngSubmit)="entrar()">
 
       <p>
-        <label for="correo">Correo electrónico</label>
+        <label for="usuario">Usuario</label>
         <input
-          id="correo"
-          type="email"
-          formControlName="correo"
-          autocomplete="email">
+          id="usuario"
+          type="text"
+          formControlName="usuario"
+          autocomplete="username">
       </p>
 
-      @if (formulario.controls.correo.touched) {
-        @if (formulario.controls.correo.hasError('required')) {
-          <small>El correo es obligatorio.</small>
-        }
-        @if (formulario.controls.correo.hasError('email')) {
-          <small>Ingresa un correo válido.</small>
+      @if (formulario.controls.usuario.touched) {
+        @if (formulario.controls.usuario.hasError('required')) {
+          <small>El usuario es obligatorio.</small>
         }
       }
 
       <p>
-        <label for="clave">Contraseña</label>
+        <label for="contrasena">Contraseña</label>
         <input
-          id="clave"
+          id="contrasena"
           type="password"
-          formControlName="clave"
+          formControlName="contrasena"
           autocomplete="current-password">
       </p>
 
-      @if (formulario.controls.clave.touched &&
-           formulario.controls.clave.hasError('required')) {
+      @if (formulario.controls.contrasena.touched &&
+           formulario.controls.contrasena.hasError('required')) {
         <small>La contraseña es obligatoria.</small>
       }
 
@@ -74,11 +71,10 @@ export class LoginPageComponent {
   error = signal('');
 
   formulario = this.fb.nonNullable.group({
-    correo: ['', [
-      Validators.required,
-      Validators.email
+    usuario: ['', [
+      Validators.required
     ]],
-    clave: ['', [
+    contrasena: ['', [
       Validators.required
     ]]
   });
@@ -95,8 +91,8 @@ export class LoginPageComponent {
     const datos = this.formulario.getRawValue();
 
     this.auth.iniciarSesion(
-      datos.correo.trim(),
-      datos.clave
+      datos.usuario.trim(),
+      datos.contrasena
     ).subscribe({
       next: () => {
         this.enviando.set(false);
@@ -114,7 +110,7 @@ export class LoginPageComponent {
       },
       error: () => {
         this.enviando.set(false);
-        this.error.set('Correo o contraseña incorrectos.');
+        this.error.set('Usuario o contraseña incorrectos.');
       }
     });
   }

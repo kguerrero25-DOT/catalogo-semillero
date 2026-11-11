@@ -2,7 +2,11 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
 
-import { Producto } from '../models/producto';
+import {
+  ProductoDetalle,
+  ProductoListado,
+  ProductoEscritura
+} from '../models/producto';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,12 +17,12 @@ export class ProductoService {
   private http = inject(HttpClient);
 
   private apiUrl =
-    `${environment.apiUrl}/products`;
+    `${environment.apiUrl}/productos`;
 
-  obtenerTodos(): Observable<Producto[]> {
+  obtenerTodos(): Observable<ProductoListado[]> {
 
     return this.http
-      .get<Producto[]>(this.apiUrl)
+      .get<ProductoListado[]>(this.apiUrl)
       .pipe(
         catchError(error => {
           console.error(
@@ -31,27 +35,26 @@ export class ProductoService {
       );
   }
 
-  obtenerPorId(id: number): Observable<Producto> {
+  obtenerPorId(id: number): Observable<ProductoDetalle> {
 
-    return this.http.get<Producto>(
+    return this.http.get<ProductoDetalle>(
       `${this.apiUrl}/${id}`
     );
   }
 
   obtenerPorCategoria(
-    categoryId: number
-  ): Observable<Producto[]> {
+    categoria: string
+  ): Observable<ProductoListado[]> {
 
-    return this.http.get<Producto[]>(
-      `${this.apiUrl}/?categoryId=${categoryId}`
+    return this.http.get<ProductoListado[]>(
+      this.apiUrl,
+      { params: { categoria } }
     );
   }
 
-  crear(
-    producto: Partial<Producto>
-  ): Observable<Producto> {
+  crear(producto: ProductoEscritura): Observable<ProductoDetalle> {
 
-    return this.http.post<Producto>(
+    return this.http.post<ProductoDetalle>(
       this.apiUrl,
       producto
     );
@@ -59,18 +62,18 @@ export class ProductoService {
 
   actualizar(
     id: number,
-    cambios: Partial<Producto>
-  ): Observable<Producto> {
+    cambios: ProductoEscritura
+  ): Observable<ProductoDetalle> {
 
-    return this.http.put<Producto>(
+    return this.http.put<ProductoDetalle>(
       `${this.apiUrl}/${id}`,
       cambios
     );
   }
 
-  eliminar(id: number): Observable<boolean> {
+  eliminar(id: number): Observable<void> {
 
-    return this.http.delete<boolean>(
+    return this.http.delete<void>(
       `${this.apiUrl}/${id}`
     );
   }

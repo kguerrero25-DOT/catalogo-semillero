@@ -1,6 +1,6 @@
 
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { Producto } from '../../models/producto';
+import { ProductoListado } from '../../models/producto';
 import { CommonModule } from '@angular/common';
 
 import { MatCardModule } from '@angular/material/card';
@@ -20,7 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './tarjeta-producto.component.css'
 })
 export class TarjetaProductoComponent {
-  @Input({ required: true }) producto!: Producto;
+  @Input({ required: true }) producto!: ProductoListado;
 
-  @Output() agregarAlCarrito = new EventEmitter<Producto>();
+  @Output() agregarAlCarrito = new EventEmitter<ProductoListado>();
 }

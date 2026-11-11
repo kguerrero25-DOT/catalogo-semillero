@@ -1,5 +1,6 @@
 
 import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -26,7 +27,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TarjetaProductoComponent } from '../../components/tarjeta-producto/tarjeta-producto.component';
 import { TablaProductosComponent } from '../../components/tabla-productos/tabla-productos.component';
 
-import { Producto } from '../../models/producto';
+import { ProductoListado } from '../../models/producto';
 import { Categoria } from '../../models/categoria';
 
 import { AuthService } from '../../services/auth.service';
@@ -67,19 +68,15 @@ export class CatalogoPageComponent {
   readonly auth = inject(AuthService);
   readonly carritoService = inject(CarritoService);
 
-  readonly rol = () =>
-    this.auth.tieneRol('admin') ? 'admin' : 'customer';
-
   cargando = signal(false);
   mensajeError = signal('');
   mensajeExito = signal('');
 
-  private categoriaSeleccionada = signal<number | null>(null);
+  private categoriaSeleccionada = signal<string | null>(null);
   readonly categoriaActual = signal('Todas');
-  readonly paginaActual = signal(1);
 
   private recargar$ = new Subject<void>();
-  private eliminar$ = new Subject<Producto>();
+  private eliminar$ = new Subject<ProductoListado>();
 
   constructor() {
     this.route.queryParamMap.subscribe(params => {
@@ -87,16 +84,8 @@ export class CatalogoPageComponent {
 
       this.categoriaActual.set(categoria ?? 'Todas');
 
-      this.paginaActual.set(
-        Math.max(1, Number(params.get('pagina')) || 1)
-      );
-
       this.categoriaSeleccionada.set(
-        categoria &&
-        Number.isInteger(Number(categoria)) &&
-        Number(categoria) > 0
-          ? Number(categoria)
-          : null
+        categoria && categoria !== 'Todas' ? categoria : null
       );
 
       this.recargar$.next();
@@ -118,7 +107,7 @@ export class CatalogoPageComponent {
       this.productoService.eliminar(producto.id).pipe(
         map(() => {
           this.mensajeExito.set(
-            `Producto "${producto.title}" eliminado correctamente.`
+            `Producto "${producto.titulo}" eliminado correctamente.`
           );
 
           this.snackBar.open(
@@ -127,13 +116,17 @@ export class CatalogoPageComponent {
             { duration: 3000 }
           );
         }),
-        catchError(() => {
-          this.mensajeError.set(
-            `No se pudo eliminar "${producto.title}".`
-          );
+        catchError((error: unknown) => {
+          const mensaje = error instanceof HttpErrorResponse && error.status === 403
+            ? 'No tienes permiso para borrar este producto.'
+            : error instanceof HttpErrorResponse && error.status === 404
+              ? 'El producto ya no existe o fue eliminado.'
+              : `No se pudo eliminar "${producto.titulo}".`;
+
+          this.mensajeError.set(mensaje);
 
           this.snackBar.open(
-            'No se pudo eliminar el producto',
+            mensaje,
             'Cerrar',
             { duration: 4000 }
           );
@@ -144,7 +137,7 @@ export class CatalogoPageComponent {
     )
   );
 
-  productos$: Observable<Producto[]> = merge(
+  productos$: Observable<ProductoListado[]> = merge(
     this.recargar$,
     this.acciones$
   ).pipe(
@@ -152,14 +145,14 @@ export class CatalogoPageComponent {
     switchMap(() => this.cargarProductos())
   );
 
-  private cargarProductos(): Observable<Producto[]> {
+  private cargarProductos(): Observable<ProductoListado[]> {
     this.cargando.set(true);
 
-    const categoriaId = this.categoriaSeleccionada();
+    const categoria = this.categoriaSeleccionada();
 
-    const peticion = categoriaId === null
+    const peticion = categoria === null
       ? this.productoService.obtenerTodos()
-      : this.productoService.obtenerPorCategoria(categoriaId);
+      : this.productoService.obtenerPorCategoria(categoria);
 
     return peticion.pipe(
       catchError(() => {
@@ -179,24 +172,13 @@ export class CatalogoPageComponent {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
-        categoria: valor === 'Todas' ? null : valor,
-        pagina: null
+        categoria: valor === 'Todas' ? null : valor
       },
       queryParamsHandling: 'merge'
     });
   }
 
-  cambiarPagina(pagina: number): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {
-        pagina: pagina <= 1 ? null : pagina
-      },
-      queryParamsHandling: 'merge'
-    });
-  }
-
-  agregarAlCarrito(producto: Producto): void {
+  agregarAlCarrito(producto: ProductoListado): void {
     this.carritoService.agregar(producto);
 
     this.snackBar.open(
@@ -206,7 +188,7 @@ export class CatalogoPageComponent {
     );
   }
 
-  editarProducto(producto: Producto): void {
+  editarProducto(producto: ProductoListado): void {
     this.router.navigate([
       '/admin/productos',
       producto.id,
@@ -214,13 +196,13 @@ export class CatalogoPageComponent {
     ]);
   }
 
-  eliminarProducto(producto: Producto): void {
+  eliminarProducto(producto: ProductoListado): void {
     const referencia = this.dialog.open(
       ConfirmarEliminarDialogComponent,
       {
         width: '400px',
         maxWidth: '95vw',
-        data: { nombre: producto.title }
+        data: { nombre: producto.titulo }
       }
     );
 
@@ -233,7 +215,7 @@ export class CatalogoPageComponent {
     });
   }
 
-  trackById(index: number, producto: Producto): number {
+  trackById(index: number, producto: ProductoListado): number {
     return producto.id;
   }
 }

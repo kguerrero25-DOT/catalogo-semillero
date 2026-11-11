@@ -7,12 +7,8 @@ export const adminGuard: CanMatchFn = (_route, segments) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.tieneRol('admin')) {
-    return true;
-  }
-
   if (auth.estaAutenticado()) {
-    return router.createUrlTree(['/productos']);
+    return true;
   }
 
   const destino = '/' + segments.map(segmento => segmento.path).join('/');

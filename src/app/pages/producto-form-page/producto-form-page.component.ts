@@ -1,13 +1,13 @@
 
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ReactiveFormsModule,
   FormBuilder,
-  Validators,
-  FormArray,
-  FormControl
+  Validators
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,7 +20,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProductoService } from '../../services/producto.service';
 import { CategoriaService } from '../../services/categoria.service';
 import { Categoria } from '../../models/categoria';
-import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
+import { ProductoEscritura } from '../../models/producto';
+
+interface ErroresProducto {
+  titulo?: string;
+  precio?: string;
+  existencias?: string;
+  categoriaId?: string;
+  [campo: string]: string | undefined;
+}
 
 @Component({
   selector: 'app-producto-form-page',
@@ -64,12 +72,11 @@ import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
 
               @if (formulario.controls.titulo.hasError('required')) {
                 <mat-error>El título es obligatorio.</mat-error>
-              } @else if (formulario.controls.titulo.hasError('soloEspacios')) {
-                <mat-error>El título no puede contener solo espacios.</mat-error>
-              } @else if (formulario.controls.titulo.hasError('minlength')) {
-                <mat-error>Mínimo 3 caracteres.</mat-error>
               } @else if (formulario.controls.titulo.hasError('maxlength')) {
-                <mat-error>Máximo 100 caracteres.</mat-error>
+                <mat-error>Máximo 120 caracteres.</mat-error>
+              }
+              @if (erroresCampos().titulo) {
+                <mat-error>{{ erroresCampos().titulo }}</mat-error>
               }
             </mat-form-field>
 
@@ -78,33 +85,38 @@ import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
               <input
                 matInput
                 type="number"
+                step="0.01"
                 formControlName="precio">
 
               @if (formulario.controls.precio.hasError('required')) {
                 <mat-error>El precio es obligatorio.</mat-error>
               } @else if (formulario.controls.precio.hasError('min')) {
                 <mat-error>El precio debe ser mayor que cero.</mat-error>
+              } @else if (formulario.controls.precio.hasError('pattern')) {
+                <mat-error>Usa como máximo dos decimales.</mat-error>
+              }
+              @if (erroresCampos().precio) {
+                <mat-error>{{ erroresCampos().precio }}</mat-error>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Descripción</mat-label>
-              <textarea
+              <mat-label>Existencias</mat-label>
+              <input
                 matInput
-                rows="4"
-                formControlName="descripcion">
-              </textarea>
+                type="number"
+                step="1"
+                formControlName="existencias">
 
-              <mat-hint align="end">
-                {{ caracteresRestantes() }} caracteres restantes
-              </mat-hint>
-
-              @if (formulario.controls.descripcion.hasError('required')) {
-                <mat-error>La descripción es obligatoria.</mat-error>
-              } @else if (formulario.controls.descripcion.hasError('minlength')) {
-                <mat-error>Mínimo 20 caracteres.</mat-error>
-              } @else if (formulario.controls.descripcion.hasError('maxlength')) {
-                <mat-error>Máximo 500 caracteres.</mat-error>
+              @if (formulario.controls.existencias.hasError('required')) {
+                <mat-error>Las existencias son obligatorias.</mat-error>
+              } @else if (formulario.controls.existencias.hasError('min')) {
+                <mat-error>Las existencias no pueden ser negativas.</mat-error>
+              } @else if (formulario.controls.existencias.hasError('pattern')) {
+                <mat-error>Las existencias deben ser un número entero.</mat-error>
+              }
+              @if (erroresCampos().existencias) {
+                <mat-error>{{ erroresCampos().existencias }}</mat-error>
               }
             </mat-form-field>
 
@@ -117,7 +129,7 @@ import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
 
                 @for (categoria of categorias(); track categoria.id) {
                   <mat-option [value]="categoria.id">
-                    {{ categoria.name }}
+                    {{ categoria.nombre }}
                   </mat-option>
                 }
               </mat-select>
@@ -125,49 +137,10 @@ import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
               @if (formulario.controls.categoriaId.invalid) {
                 <mat-error>Selecciona una categoría.</mat-error>
               }
-            </mat-form-field>
-
-            <h2>Imágenes</h2>
-
-            <div formArrayName="imagenes">
-              @for (control of imagenes.controls; track control; let i = $index) {
-                <div class="fila-imagen">
-                  <mat-form-field appearance="outline">
-                    <mat-label>URL de imagen {{ i + 1 }}</mat-label>
-
-                    <input
-                      matInput
-                      type="url"
-                      [formControlName]="i">
-
-                    @if (control.hasError('required')) {
-                      <mat-error>La URL es obligatoria.</mat-error>
-                    } @else if (control.hasError('pattern')) {
-                      <mat-error>
-                        Debe comenzar con http:// o https://.
-                      </mat-error>
-                    }
-                  </mat-form-field>
-
-                  <button
-                    mat-icon-button
-                    type="button"
-                    aria-label="Quitar imagen"
-                    (click)="quitarImagen(i)"
-                    [disabled]="imagenes.length === 1">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
+              @if (erroresCampos().categoriaId) {
+                <mat-error>{{ erroresCampos().categoriaId }}</mat-error>
               }
-            </div>
-
-            <button
-              mat-stroked-button
-              type="button"
-              (click)="agregarImagen()">
-              <mat-icon>add</mat-icon>
-              Agregar imagen
-            </button>
+            </mat-form-field>
 
             @if (error()) {
               <p class="error" role="alert">{{ error() }}</p>
@@ -229,25 +202,6 @@ import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
       width: 100%;
     }
 
-    h2 {
-      margin: 8px 0 0;
-    }
-
-    .fila-imagen {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .fila-imagen mat-form-field {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .fila-imagen button {
-      flex-shrink: 0;
-    }
-
     .acciones {
       display: flex;
       align-items: center;
@@ -287,14 +241,9 @@ export class ProductoFormPageComponent implements OnInit {
   editando = signal(false);
   guardando = signal(false);
   error = signal('');
-  caracteresRestantes = signal(500);
+  erroresCampos = signal<ErroresProducto>({});
 
   private productoId: number | null = null;
-
-  private validadoresImagen = [
-    Validators.required,
-    Validators.pattern(/^https?:\/\/\S+$/i)
-  ];
 
   formulario = this.fb.nonNullable.group({
     codigo: this.fb.nonNullable.control({
@@ -303,42 +252,25 @@ export class ProductoFormPageComponent implements OnInit {
     }),
     titulo: ['', [
       Validators.required,
-      Validators.minLength(3),
-      Validators.maxLength(100),
-      noSoloEspacios
+      Validators.maxLength(120)
     ]],
     precio: [0, [
       Validators.required,
-      Validators.min(0.01)
+      Validators.min(0.01),
+      Validators.pattern(/^\d+(\.\d{1,2})?$/)
     ]],
-    descripcion: ['', [
+    existencias: [0, [
       Validators.required,
-      Validators.minLength(20),
-      Validators.maxLength(500)
+      Validators.min(0),
+      Validators.pattern(/^\d+$/)
     ]],
     categoriaId: [0, [
       Validators.required,
       Validators.min(1)
-    ]],
-    imagenes: this.fb.array<FormControl<string>>([
-      this.fb.nonNullable.control('', this.validadoresImagen)
-    ])
+    ]]
   });
 
-  get imagenes(): FormArray<FormControl<string>> {
-    return this.formulario.controls.imagenes;
-  }
-
   ngOnInit(): void {
-    this.categoriaService.obtenerTodas().subscribe({
-      next: categorias => this.categorias.set(categorias),
-      error: () => this.error.set('No se pudieron cargar las categorías.')
-    });
-
-    this.formulario.controls.descripcion.valueChanges.subscribe(valor => {
-      this.caracteresRestantes.set(500 - valor.length);
-    });
-
     const id = this.route.snapshot.paramMap.get('id');
 
     if (id !== null) {
@@ -352,54 +284,39 @@ export class ProductoFormPageComponent implements OnInit {
       this.editando.set(true);
       this.productoId = idNumerico;
 
-      this.productoService.obtenerPorId(idNumerico).subscribe({
-        next: producto => {
-          this.formulario.patchValue({
-            codigo: producto.id,
-            titulo: producto.title,
-            precio: producto.price,
-            descripcion: producto.description,
-            categoriaId: producto.category.id
-          });
+      forkJoin({
+        producto: this.productoService.obtenerPorId(idNumerico),
+        categorias: this.categoriaService.obtenerTodas()
+      }).subscribe({
+        next: ({ producto, categorias }) => {
+          this.categorias.set(categorias);
+          const categoria = categorias.find(
+            elemento => elemento.nombre === producto.categoria
+          );
 
-          this.imagenes.clear();
-
-          producto.images.forEach(imagen => {
-            this.imagenes.push(
-              this.fb.nonNullable.control(
-                imagen,
-                this.validadoresImagen
-              )
+          if (!categoria) {
+            this.error.set(
+              `No se encontró la categoría "${producto.categoria}" del producto.`
             );
-          });
-
-          if (this.imagenes.length === 0) {
-            this.imagenes.push(
-              this.fb.nonNullable.control(
-                '',
-                this.validadoresImagen
-              )
-            );
+            return;
           }
 
+          this.formulario.patchValue({
+            codigo: producto.id,
+            titulo: producto.titulo,
+            precio: producto.precio,
+            existencias: producto.existencias,
+            categoriaId: categoria.id
+          });
           this.formulario.markAsPristine();
         },
-        error: () => this.error.set('No se pudo cargar el producto.')
+        error: (error: unknown) => this.mostrarError(error, true)
       });
-    }
-  }
-
-  agregarImagen(): void {
-    this.imagenes.push(
-      this.fb.nonNullable.control('', this.validadoresImagen)
-    );
-    this.formulario.markAsDirty();
-  }
-
-  quitarImagen(indice: number): void {
-    if (this.imagenes.length > 1) {
-      this.imagenes.removeAt(indice);
-      this.formulario.markAsDirty();
+    } else {
+      this.categoriaService.obtenerTodas().subscribe({
+        next: categorias => this.categorias.set(categorias),
+        error: (error: unknown) => this.mostrarError(error, false)
+      });
     }
   }
 
@@ -408,8 +325,8 @@ export class ProductoFormPageComponent implements OnInit {
       this.formulario.markAllAsTouched();
 
       setTimeout(() => {
-        document.querySelector(
-          'input.ng-invalid, textarea.ng-invalid, mat-select.ng-invalid'
+      document.querySelector(
+          'input.ng-invalid, mat-select.ng-invalid'
         )?.scrollIntoView({
           behavior: 'smooth',
           block: 'center'
@@ -421,22 +338,19 @@ export class ProductoFormPageComponent implements OnInit {
 
     this.guardando.set(true);
     this.error.set('');
+    this.erroresCampos.set({});
 
     const datos = this.formulario.getRawValue();
 
-    const producto = {
-      title: datos.titulo.trim(),
-      price: datos.precio,
-      description: datos.descripcion,
-      categoryId: datos.categoriaId,
-      images: datos.imagenes
+    const producto: ProductoEscritura = {
+      titulo: datos.titulo.trim(),
+      precio: datos.precio,
+      existencias: datos.existencias,
+      categoriaId: datos.categoriaId
     };
 
     const peticion = this.editando() && this.productoId !== null
-      ? this.productoService.actualizar(this.productoId, {
-        ...producto,
-        id: datos.codigo
-      })
+      ? this.productoService.actualizar(this.productoId, producto)
       : this.productoService.crear(producto);
 
     peticion.subscribe({
@@ -445,11 +359,72 @@ export class ProductoFormPageComponent implements OnInit {
         this.guardando.set(false);
         this.router.navigate(['/productos']);
       },
-      error: () => {
-        this.error.set('No se pudo guardar el producto.');
-        this.guardando.set(false);
-      }
+      error: (error: unknown) => this.mostrarError(error, false)
     });
+  }
+
+  private mostrarError(error: unknown, cargando: boolean): void {
+    this.guardando.set(false);
+
+    if (!(error instanceof HttpErrorResponse)) {
+      this.error.set(
+        cargando
+          ? 'No se pudo cargar el producto o las categorías.'
+          : 'No se pudo guardar el producto.'
+      );
+      return;
+    }
+
+    if (error.status === 403) {
+      this.error.set('No tienes permiso para realizar esta acción.');
+      return;
+    }
+
+    if (error.status === 404) {
+      this.error.set('El producto no existe o ya fue eliminado.');
+      return;
+    }
+
+    if (error.status === 400) {
+      const cuerpo: unknown = error.error;
+      if (typeof cuerpo === 'object' && cuerpo !== null) {
+        const respuesta = cuerpo as {
+          mensaje?: unknown;
+          campos?: unknown;
+        };
+        const erroresCampos: ErroresProducto = {};
+        if (
+          typeof respuesta.campos === 'object' &&
+          respuesta.campos !== null &&
+          !Array.isArray(respuesta.campos)
+        ) {
+          for (const [campo, mensaje] of Object.entries(
+            respuesta.campos as Record<string, unknown>
+          )) {
+            if (typeof mensaje === 'string') {
+              erroresCampos[campo] = mensaje;
+            }
+          }
+        }
+        this.erroresCampos.set(erroresCampos);
+
+        this.error.set(
+          typeof respuesta.mensaje === 'string'
+            ? respuesta.mensaje
+            : 'Revisa los datos ingresados y corrige los errores.'
+        );
+        return;
+      }
+
+      this.error.set('Revisa los datos ingresados y corrige los errores.');
+      return;
+    }
+
+    this.error.set(
+      cargando
+        ? 'No se pudo cargar el producto o las categorías.'
+        : 'No se pudo guardar el producto.'
+    );
   }
 
   puedeSalir(): boolean {

@@ -1,6 +1,6 @@
 export interface Categoria {
   id: number;
-  name: string;
-  slug: string;
-  image: string;
+  nombre: string;
+  descripcion: string;
+  cantidadProductos: number;
 }

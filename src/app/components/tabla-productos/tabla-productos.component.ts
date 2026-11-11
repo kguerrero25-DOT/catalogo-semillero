@@ -14,7 +14,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
-import { Producto } from '../../models/producto';
+import { ProductoListado } from '../../models/producto';
 
 @Component({
   selector: 'app-tabla-productos',
@@ -33,22 +33,20 @@ export class TablaProductosComponent implements AfterViewInit {
 
   columnas: string[] = [
     'id',
-    'imagen',
     'titulo',
-    'categoria',
     'precio',
     'acciones'
   ];
 
-  dataSource = new MatTableDataSource<Producto>([]);
+  dataSource = new MatTableDataSource<ProductoListado>([]);
 
   @Input({ required: true })
-  set productos(valor: Producto[]) {
+  set productos(valor: ProductoListado[]) {
     this.dataSource.data = valor ?? [];
   }
 
-  @Output() editar = new EventEmitter<Producto>();
-  @Output() eliminar = new EventEmitter<Producto>();
+  @Output() editar = new EventEmitter<ProductoListado>();
+  @Output() eliminar = new EventEmitter<ProductoListado>();
 
   @ViewChild(MatPaginator)
   paginator!: MatPaginator;

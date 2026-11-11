@@ -1,5 +1,6 @@
 
 import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -12,9 +13,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
+import { AuthService } from '../../services/auth.service';
 import { noSoloEspacios } from '../../validators/no-solo-espacios.validator';
-import { clavesIguales } from '../../validators/claves-iguales.validator';
-import { correoDisponible } from '../../validators/correo-disponible.validator';
+
+interface ErroresRegistro {
+  usuario?: string;
+  contrasena?: string;
+  correo?: string;
+}
 
 @Component({
   selector: 'app-registro-page',
@@ -39,17 +45,17 @@ import { correoDisponible } from '../../validators/correo-disponible.validator';
           <form [formGroup]="formulario" (ngSubmit)="registrar()">
 
             <mat-form-field appearance="outline">
-              <mat-label>Nombre</mat-label>
-              <input matInput formControlName="nombre">
+              <mat-label>Usuario</mat-label>
+              <input matInput formControlName="usuario" autocomplete="username">
 
-              @if (formulario.controls.nombre.hasError('required')) {
-                <mat-error>El nombre es obligatorio.</mat-error>
+              @if (formulario.controls.usuario.hasError('required')) {
+                <mat-error>El usuario es obligatorio.</mat-error>
               }
-              @if (formulario.controls.nombre.hasError('minlength')) {
-                <mat-error>El nombre debe tener mínimo 3 caracteres.</mat-error>
+              @if (formulario.controls.usuario.hasError('maxlength')) {
+                <mat-error>El usuario no puede superar 80 caracteres.</mat-error>
               }
-              @if (formulario.controls.nombre.hasError('soloEspacios')) {
-                <mat-error>El nombre no puede contener solo espacios.</mat-error>
+              @if (erroresCampos().usuario) {
+                <mat-error>{{ erroresCampos().usuario }}</mat-error>
               }
             </mat-form-field>
 
@@ -67,15 +73,11 @@ import { correoDisponible } from '../../validators/correo-disponible.validator';
               @if (formulario.controls.correo.hasError('email')) {
                 <mat-error>Ingresa un correo válido.</mat-error>
               }
-              @if (formulario.controls.correo.hasError('correoOcupado')) {
-                <mat-error>Este correo ya está registrado.</mat-error>
+              @if (formulario.controls.correo.hasError('maxlength')) {
+                <mat-error>El correo no puede superar 254 caracteres.</mat-error>
               }
-              @if (formulario.controls.correo.hasError('errorServidor')) {
-                <mat-error>No se pudo comprobar el correo.</mat-error>
-              }
-
-              @if (formulario.controls.correo.pending) {
-                <mat-hint>Comprobando disponibilidad...</mat-hint>
+              @if (erroresCampos().correo) {
+                <mat-error>{{ erroresCampos().correo }}</mat-error>
               }
             </mat-form-field>
 
@@ -84,36 +86,17 @@ import { correoDisponible } from '../../validators/correo-disponible.validator';
               <input
                 matInput
                 type="password"
-                formControlName="clave"
+                formControlName="contrasena"
                 autocomplete="new-password">
 
-              @if (formulario.controls.clave.hasError('required')) {
+              @if (formulario.controls.contrasena.hasError('required')) {
                 <mat-error>La contraseña es obligatoria.</mat-error>
               }
-              @if (formulario.controls.clave.hasError('minlength')) {
+              @if (formulario.controls.contrasena.hasError('minlength')) {
                 <mat-error>Mínimo 8 caracteres.</mat-error>
               }
-              @if (formulario.controls.clave.hasError('pattern')) {
-                <mat-error>Debe contener una letra y un número.</mat-error>
-              }
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Confirmar contraseña</mat-label>
-              <input
-                matInput
-                type="password"
-                formControlName="confirmacion"
-                autocomplete="new-password">
-
-              @if (formulario.controls.confirmacion.hasError('required')) {
-                <mat-error>Debes confirmar la contraseña.</mat-error>
-              }
-              @if (formulario.controls.confirmacion.touched &&
-                   formulario.hasError('clavesDistintas')) {
-                <mat-hint class="error-confirmacion">
-                  Las contraseñas no coinciden.
-                </mat-hint>
+              @if (erroresCampos().contrasena) {
+                <mat-error>{{ erroresCampos().contrasena }}</mat-error>
               }
             </mat-form-field>
 
@@ -125,7 +108,7 @@ import { correoDisponible } from '../../validators/correo-disponible.validator';
               mat-flat-button
               color="primary"
               type="submit"
-              [disabled]="enviando() || formulario.pending">
+              [disabled]="enviando()">
               @if (enviando()) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {
@@ -176,8 +159,7 @@ import { correoDisponible } from '../../validators/correo-disponible.validator';
       min-height: 44px;
     }
 
-    .error,
-    .error-confirmacion {
+    .error {
       color: #b91c1c;
     }
 
@@ -200,67 +182,101 @@ import { correoDisponible } from '../../validators/correo-disponible.validator';
 export class RegistroPageComponent {
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private auth = inject(AuthService);
 
   enviando = signal(false);
   error = signal('');
+  erroresCampos = signal<ErroresRegistro>({});
 
   formulario = this.fb.nonNullable.group({
-    nombre: ['', [
+    usuario: ['', [
       Validators.required,
-      Validators.minLength(3),
+      Validators.maxLength(80),
       noSoloEspacios
     ]],
-    correo: this.fb.nonNullable.control('', {
-      validators: [
-        Validators.required,
-        Validators.email
-      ],
-      asyncValidators: [correoDisponible()],
-      updateOn: 'blur'
-    }),
-    clave: ['', [
+    contrasena: ['', [
       Validators.required,
-      Validators.minLength(8),
-      Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d).+$/)
+      Validators.minLength(8)
     ]],
-    confirmacion: ['', Validators.required]
-  }, {
-    validators: [clavesIguales]
+    correo: ['', [
+      Validators.required,
+      Validators.email,
+      Validators.maxLength(254)
+    ]]
   });
 
   registrar(): void {
-    if (this.formulario.invalid || this.formulario.pending) {
+    if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
     }
 
     this.enviando.set(true);
     this.error.set('');
+    this.erroresCampos.set({});
 
-    try {
-      const datos = this.formulario.getRawValue();
+    const datos = this.formulario.getRawValue();
+    this.auth.registrar(
+      datos.usuario.trim(),
+      datos.contrasena,
+      datos.correo.trim().toLowerCase()
+    ).subscribe({
+      next: () => {
+        this.formulario.reset();
+        this.router.navigate(['/login']);
+      },
+      error: (error: unknown) => this.mostrarErrorRegistro(error),
+      complete: () => this.enviando.set(false)
+    });
+  }
 
-      const usuarios: { nombre: string; correo: string }[] =
-        JSON.parse(
-          localStorage.getItem('usuarios_registrados') || '[]'
+  private mostrarErrorRegistro(error: unknown): void {
+    this.enviando.set(false);
+
+    if (!(error instanceof HttpErrorResponse)) {
+      this.error.set('No se pudo completar el registro. Inténtalo de nuevo.');
+      return;
+    }
+
+    if (error.status === 409) {
+      this.error.set('Ese nombre de usuario ya está registrado.');
+      return;
+    }
+
+    if (error.status === 400) {
+      const cuerpo: unknown = error.error;
+      if (typeof cuerpo === 'object' && cuerpo !== null) {
+        const respuesta = cuerpo as {
+          mensaje?: unknown;
+          campos?: unknown;
+        };
+
+        this.error.set(
+          typeof respuesta.mensaje === 'string'
+            ? respuesta.mensaje
+            : 'Revisa los datos ingresados y corrige los errores indicados.'
         );
 
-      usuarios.push({
-        nombre: datos.nombre.trim(),
-        correo: datos.correo.trim().toLowerCase()
-      });
-
-      localStorage.setItem(
-        'usuarios_registrados',
-        JSON.stringify(usuarios)
-      );
-
-      this.formulario.reset();
-      this.router.navigate(['/login']);
-    } catch {
-      this.error.set('No se pudo completar el registro.');
-    } finally {
-      this.enviando.set(false);
+        if (
+          typeof respuesta.campos === 'object' &&
+          respuesta.campos !== null &&
+          !Array.isArray(respuesta.campos)
+        ) {
+          const errores: ErroresRegistro = {};
+          for (const campo of ['usuario', 'contrasena', 'correo'] as const) {
+            const mensaje = (respuesta.campos as Record<string, unknown>)[campo];
+            if (typeof mensaje === 'string') {
+              errores[campo] = mensaje;
+            }
+          }
+          this.erroresCampos.set(errores);
+        }
+      } else {
+        this.error.set('Revisa los datos ingresados y corrige los errores indicados.');
+      }
+      return;
     }
+
+    this.error.set('No se pudo completar el registro. Inténtalo de nuevo.');
   }
 }

@@ -72,15 +72,6 @@ h1 {
   flex: 1;
 }
 
-.paginacion {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 32px;
-}
-
 @media (max-width: 375px) {
   .contenedor {
     padding: 16px 8px;
@@ -88,9 +79,5 @@ h1 {
 
   .cuadricula {
     grid-template-columns: 1fr;
-  }
-
-  .paginacion {
-    gap: 8px;
   }
 }

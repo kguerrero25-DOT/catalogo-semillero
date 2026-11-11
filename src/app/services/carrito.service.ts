@@ -4,7 +4,7 @@ import {
   computed
 } from '@angular/core';
 
-import { Producto } from '../models/producto';
+import { ProductoCarrito } from '../models/producto';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +15,7 @@ export class CarritoService {
     'carrito_wposs';
 
   private items =
-    signal<Producto[]>([]);
+    signal<ProductoCarrito[]>([]);
 
   readonly productos =
     this.items.asReadonly();
@@ -27,7 +27,7 @@ export class CarritoService {
     computed(() =>
       this.items().reduce(
         (suma, producto) =>
-          suma + producto.price,
+          suma + producto.precio,
         0
       )
     );
@@ -41,7 +41,7 @@ export class CarritoService {
 
       try {
 
-        const productos: Producto[] =
+        const productos: ProductoCarrito[] =
           JSON.parse(guardado);
 
         this.items.set(productos);
@@ -58,7 +58,7 @@ export class CarritoService {
     }
   }
 
-  agregar(producto: Producto): void {
+  agregar(producto: ProductoCarrito): void {
 
     this.items.update(lista => [
       ...lista,

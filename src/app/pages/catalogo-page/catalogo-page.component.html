@@ -39,8 +39,8 @@
 
       @if (categorias$ | async; as categorias) {
       @for (categoria of categorias; track categoria.id) {
-      <mat-option [value]="categoria.id.toString()">
-        {{ categoria.name }}
+      <mat-option [value]="categoria.nombre">
+        {{ categoria.nombre }}
       </mat-option>
       }
       }
@@ -68,7 +68,7 @@
   <p>No hay productos disponibles.</p>
   }
 
-  @if (rol() === 'admin') {
+  @if (auth.estaAutenticado()) {
 
   <div class="encabezado-admin">
     <h2>Administración de productos</h2>
@@ -109,26 +109,5 @@
 
   }
   }
-
-  <div class="paginacion">
-    <button
-      mat-stroked-button
-      type="button"
-      [disabled]="paginaActual() <= 1"
-      (click)="cambiarPagina(paginaActual() - 1)">
-      <mat-icon>chevron_left</mat-icon>
-      Anterior
-    </button>
-
-    <span>Página {{ paginaActual() }}</span>
-
-    <button
-      mat-stroked-button
-      type="button"
-      (click)="cambiarPagina(paginaActual() + 1)">
-      Siguiente
-      <mat-icon>chevron_right</mat-icon>
-    </button>
-  </div>
 
 </div>
